@@ -4,10 +4,13 @@ package org.upgrad.upstac.testrequests.lab;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.upgrad.upstac.config.security.UserLoggedInService;
 import org.upgrad.upstac.exception.AppException;
+import org.upgrad.upstac.testrequests.RequestStatus;
 import org.upgrad.upstac.testrequests.TestRequest;
 import org.upgrad.upstac.testrequests.TestRequestQueryService;
 import org.upgrad.upstac.testrequests.TestRequestUpdateService;
@@ -28,8 +31,6 @@ public class LabRequestController {
     Logger log = LoggerFactory.getLogger(LabRequestController.class);
 
 
-
-
     @Autowired
     private TestRequestUpdateService testRequestUpdateService;
 
@@ -39,33 +40,41 @@ public class LabRequestController {
     private TestRequestFlowService testRequestFlowService;
 
 
-
     @Autowired
     private UserLoggedInService userLoggedInService;
 
 
-
     @GetMapping("/to-be-tested")
     @PreAuthorize("hasAnyRole('TESTER')")
-    public List<TestRequest> getForTests()  {
+    public List<TestRequest> getForTests() {
 
         //Implement this method to return the list of test requests having status as 'INITIATED'
         //Make use of the findBy() method from testRequestQueryService class to get the list
         // For reference check the method requestHistory() method from TestRequestController class
-            return null; // replace this line with your code
+        try {
+            return testRequestQueryService.findBy(RequestStatus.INITIATED);
+        } catch (AppException e) {
+            throw asBadRequest(e.getMessage());
+        }
 
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('TESTER')")
-    public List<TestRequest> getForTester()  {
+    public List<TestRequest> getForTester() {
 
         // Create an object of User class and store the current logged in user first
         //Implement this method to return the list of test requests assigned to current tester(make use of the above created User object)
         //Make use of the findByTester() method from testRequestQueryService class to get the list
         // For reference check the method getPendingTests() method from TestRequestController class
 
-        return null; // replace this line with your code
+        try {
+            User user = userLoggedInService.getLoggedInUser();
+            List<TestRequest> testRequests = testRequestQueryService.findByTester(user);
+            return testRequests;
+        } catch (AppException e) {
+            throw asBadRequest(e.getMessage());
+        }
 
 
     }
@@ -82,35 +91,34 @@ public class LabRequestController {
         // Refer to the method createRequest() from the TestRequestController class
 
         try {
+            User user = userLoggedInService.getLoggedInUser();
+            TestRequest testRequest = testRequestUpdateService.assignForLabTest(id, user);
+            return testRequest;
 
-            return null; // replace this line of code with your implementation
-
-
-        }catch (AppException e) {
+        } catch (AppException e) {
             throw asBadRequest(e.getMessage());
         }
     }
 
     @PreAuthorize("hasAnyRole('TESTER')")
     @PutMapping("/update/{id}")
-    public TestRequest updateLabTest(@PathVariable Long id,@RequestBody CreateLabResult createLabResult) {
+    public TestRequest updateLabTest(@PathVariable Long id, @RequestBody CreateLabResult createLabResult) {
 
         // Implement this method to update the result of the current test request id with test results
         // Create an object of the User class to get the logged in user
         // Create an object of TestResult class and make use of updateLabTest() method from testRequestUpdateService class
         //to update the current test request id with the createLabResult details by the current user(object created)
         try {
-            return null; // replace this line of code with your implementation
+            User user = userLoggedInService.getLoggedInUser();
+            TestRequest testRequest = testRequestUpdateService.updateLabTest(id, createLabResult, user);
+            return testRequest;
 
         } catch (ConstraintViolationException e) {
             throw asConstraintViolation(e);
-        }catch (AppException e) {
+        } catch (AppException e) {
             throw asBadRequest(e.getMessage());
         }
     }
-
-
-
 
 
 }
