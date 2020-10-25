@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.web.server.ResponseStatusException;
+import org.upgrad.upstac.exception.AppException;
 import org.upgrad.upstac.testrequests.lab.CreateLabResult;
 import org.upgrad.upstac.testrequests.lab.LabRequestController;
 import org.upgrad.upstac.testrequests.lab.TestStatus;
@@ -41,12 +42,16 @@ class LabRequestControllerTest {
 
         //Create another object of the TestRequest method and explicitly assign this object for Lab Test using assignForLabTest() method
         // from labRequestController class. Pass the request id of testRequest object.
+        TestRequest labTestResult = labRequestController.assignForLabTest(testRequest.getRequestId());
 
         //Use assertThat() methods to perform the following two comparisons
         //  1. the request ids of both the objects created should be same
         //  2. the status of the second object should be equal to 'INITIATED'
         // make use of assertNotNull() method to make sure that the lab result of second object is not null
         // use getLabResult() method to get the lab result
+        assertThat("Request id should be same", testRequest.getRequestId(), equalTo(labTestResult.getRequestId()));
+        assertThat("status should be INITIATED", testRequest.getStatus(), equalTo(labTestResult.getStatus()));
+        assertNotNull(labTestResult.getLabResult());
 
 
     }
@@ -66,10 +71,12 @@ class LabRequestControllerTest {
 
         // Create an object of ResponseStatusException . Use assertThrows() method and pass assignForLabTest() method
         // of labRequestController with InvalidRequestId as Id
+        ResponseStatusException error = assertThrows(ResponseStatusException.class, () -> labRequestController.assignForLabTest(InvalidRequestId));
 
 
         //Use assertThat() method to perform the following comparison
         //  the exception message should be contain the string "Invalid ID"
+        assertThat("error message should be invalid id", "Invalid ID", equalTo(error.getMessage()));
 
     }
 
@@ -81,14 +88,20 @@ class LabRequestControllerTest {
 
         //Implement this method
         //Create an object of CreateLabResult and call getCreateLabResult() to create the object. Pass the above created object as the parameter
+        CreateLabResult labResult = getCreateLabResult(testRequest);
 
         //Create another object of the TestRequest method and explicitly update the status of this object
         // to be 'LAB_TEST_IN_PROGRESS'. Make use of updateLabTest() method from labRequestController class (Pass the previously created two objects as parameters)
+        TestRequest anotherTestRequest = labRequestController.updateLabTest(testRequest.getRequestId(), labResult);
+        anotherTestRequest.setStatus(RequestStatus.LAB_TEST_IN_PROGRESS);
 
         //Use assertThat() methods to perform the following three comparisons
         //  1. the request ids of both the objects created should be same
         //  2. the status of the second object should be equal to 'LAB_TEST_COMPLETED'
         // 3. the results of both the objects created should be same. Make use of getLabResult() method to get the results.
+        assertThat("request id should be same", testRequest.getRequestId(), equalTo(anotherTestRequest.getRequestId()));
+        assertThat("status should be LAB_TEST_COMPLETED", anotherTestRequest.getStatus(), equalTo(RequestStatus.LAB_TEST_COMPLETED));
+        assertThat("result should be same", testRequest.getLabResult(), equalTo(anotherTestRequest.getLabResult()));
 
 
 
@@ -105,14 +118,17 @@ class LabRequestControllerTest {
         //Implement this method
 
         //Create an object of CreateLabResult and call getCreateLabResult() to create the object. Pass the above created object as the parameter
+        CreateLabResult labResult = getCreateLabResult(testRequest);
 
         // Create an object of ResponseStatusException . Use assertThrows() method and pass updateLabTest() method
         // of labRequestController with a negative long value as Id and the above created object as second parameter
         //Refer to the TestRequestControllerTest to check how to use assertThrows() method
+        ResponseStatusException error = assertThrows(ResponseStatusException.class, () -> labRequestController.updateLabTest(-1L, labResult));
 
 
         //Use assertThat() method to perform the following comparison
         //  the exception message should be contain the string "Invalid ID"
+        assertThat("exception message should contain Invalid ID", error.getMessage(), equalTo("Invalid ID"));
 
     }
 
@@ -126,14 +142,18 @@ class LabRequestControllerTest {
 
         //Create an object of CreateLabResult and call getCreateLabResult() to create the object. Pass the above created object as the parameter
         // Set the result of the above created object to null.
+        CreateLabResult labResult = getCreateLabResult(testRequest);
+        labResult.setResult(null);
 
         // Create an object of ResponseStatusException . Use assertThrows() method and pass updateLabTest() method
         // of labRequestController with request Id of the testRequest object and the above created object as second parameter
         //Refer to the TestRequestControllerTest to check how to use assertThrows() method
+        ResponseStatusException error = assertThrows(ResponseStatusException.class, () -> labRequestController.updateLabTest(testRequest.getRequestId(), labResult));
 
 
         //Use assertThat() method to perform the following comparison
         //  the exception message should be contain the string "ConstraintViolationException"
+        assertThat("exception message should contain ConstraintViolationException", error.getMessage(), equalTo("ConstraintViolationException"));
 
     }
 
@@ -141,9 +161,14 @@ class LabRequestControllerTest {
 
         //Create an object of CreateLabResult and set all the values
         // Return the object
-
-
-        return null; // Replace this line with your code
+        CreateLabResult labResult = new CreateLabResult();
+        labResult.setBloodPressure(testRequest.getLabResult().getBloodPressure());
+        labResult.setComments(testRequest.getLabResult().getComments());
+        labResult.setHeartBeat(testRequest.getLabResult().getHeartBeat());
+        labResult.setOxygenLevel(testRequest.getLabResult().getOxygenLevel());
+        labResult.setTemperature(testRequest.getLabResult().getTemperature());
+        labResult.setResult(testRequest.getLabResult().getResult());
+        return labResult;
     }
 
 }
