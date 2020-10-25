@@ -9,6 +9,7 @@ import org.upgrad.upstac.testrequests.TestRequest;
 import org.upgrad.upstac.users.User;
 
 import javax.transaction.Transactional;
+import java.time.LocalDate;
 
 @Service
 @Validated
@@ -27,7 +28,10 @@ public class LabResultService {
         //Implement this method to create the lab result module service
         // create object of LabResult class and use the setter methods to set tester and testRequest details
         // make use of saveLabResult() method to return the LabResult object
-        return null; // replace this line with your code
+        LabResult labResult = new LabResult();
+        labResult.setRequest(testRequest);
+        labResult.setTester(tester);
+        return saveLabResult(labResult);
     }
 
     @Transactional
@@ -51,8 +55,16 @@ public class LabResultService {
         // create an object of LabResult and make use of setters to set Blood Pressure, Comments,
         // HeartBeat, OxygenLevel, Temperature, Result and UpdatedOn values
         // make use of the saveLabResult() method to return the object of LabResult
+        LabResult labResult = new LabResult();
+        labResult.setBloodPressure(createLabResult.getBloodPressure());
+        labResult.setComments(createLabResult.getComments());
+        labResult.setHeartBeat(createLabResult.getHeartBeat());
+        labResult.setOxygenLevel(createLabResult.getOxygenLevel());
+        labResult.setTemperature(createLabResult.getTemperature());
+        labResult.setResult(createLabResult.getResult());
+        labResult.setUpdatedOn(LocalDate.now());
 
-        return null; // replace this line with your code
+        return saveLabResult(labResult);
 
 
     }
